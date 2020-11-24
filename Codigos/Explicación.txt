@@ -1,0 +1,4 @@
+1. El codigo para frecuencia respiratoria simulación es un intento para poder replicar el sensor de frecuencia respiratoria
+2. El codigo 2 del bluetooth es el segundo intento en terminos de codigo de Arduino para poder enviar los datos
+3. El codigo para SpO2, Temperatura y Bluetooth 1 han compilado, sin embargo no podemos probar el envio de datos, ya que no tenemos los sensores.
+4. El codigo para bioimpedancia y voltaje funcionan en C.
