@@ -26,7 +26,7 @@ void loop(){                  // Definir flag. Sale en 0, volver a 1 cuando impr
   //delay(500);                      // minimum delay necessary to read values
   //ambientIR = analogRead(IRpin);   // storing IR coming from the ambient
   //delay(500);                      // minimum delay necessary to read values
-  tiempoInicial = millis();   // Captura el tiempo transcurrido hasta este momento
+  //tiempoInicial = millis();   // Captura el tiempo transcurrido hasta este momento
   ciclos = contarCiclos ();   // Llama a la funcion que contara el total de ciclos por minuto
   //Serial.println(ciclos);   // writing the read value on Serial monitor
 }
@@ -47,6 +47,39 @@ float readIR(float times){           // se define times como float para que pued
   return(distance/times);            // return the final value = distancia promedio
 }
 
+
+int contarCiclos(){
+  unsigned long tiempoActual = 0;         // almacenara el tiempo actual
+  unsigned long tiempoTranscurrido = 0;   // almacenara la diferencia el tiempo necesario para controlar la topa de ciclos
+  
+  int numPico = -1;
+  float senal[]= {0.0,0.0,0.0};
+  float varAnt=0.0;
+  float var=0.0;
+
+  while (tiempoTranscurrido<= 30000){
+  var = readIR(5.0); // var almacena cada nueva distancia almacenada por el sensor
+  if (var != varAnt){
+      senal[0] = senal [1]; senal[1]=senal[2];
+      senal[2] = var;
+  }
+  if (senal[1]>senal[0]&&senal[1]>senal[2]){
+      numPico = numPico+1;
+  }
+  if (numPico==0){
+    tiempoInicial = millis();
+  }
+
+  varAnt=var;
+  tiempoActual=millis();          // Captura el tiempo transcurrido hasta este momento
+  tiempoTranscurrido = tiempoActual - tiempoInicial;
+  }
+  return (numPico);
+}
+
+
+
+/*
 int contarCiclos (){
   unsigned long tiempoActual = 0;         // almacenara el tiempo actual
   unsigned long tiempoTranscurrido = 0;   // almacenara la diferencia el tiempo necesario para controlar la topa de ciclos
@@ -84,7 +117,7 @@ int contarCiclos (){
 
   flag = 1;
   return ciclos;
-}
+}*/
 
 
 
@@ -109,10 +142,12 @@ int contarCiclos (){
 
 int IRpin = A0;               // IR photodiode on analog pin A0
 int IRemitter = 2;            // IR emitter LED on digital pin 2
-//int ambientIR;                // variable to store the IR coming from the ambient
-int obstacleIR;               // variable to store the IR coming from the object
-int value[10];                // variable to store the IR values
-int distance;                 // variable that will tell if there is an obstacle or not
+//long ambientIR;                // variable to store the IR coming from the ambient
+float obstacleIR;               // variable to store the IR coming from the object
+float value[10];                // variable to store the IR values
+float distance;                 // variable that will tell if there is an obstacle or not
+unsigned long tiempoInicial = 0; // almacena el valor del tiempo inicial
+int ciclos = 0;                  // almacena el numero de ciclos por minuto
 
 void setup(){
   Serial.begin(9600);         // initializing Serial monitor
@@ -125,15 +160,16 @@ void loop(){
   //delay(1000);                      // minimum delay necessary to read values
   //ambientIR = analogRead(IRpin);   // storing IR coming from the ambient
   //delay(500);                      // minimum delay necessary to read values
-  distance = readIR(5);       // calling the function that will read the distance and passing the "accuracy" to it
-  Serial.println(distance);   // writing the read value on Serial monitor
+  ciclos = contarCiclos ();   // Llama a la funcion que contara el total de ciclos por minuto
+  Serial.println(ciclos);   // writing the read value on Serial monitor
   // buzzer();                // uncomment to activate the buzzer function
 }
 
-int readIR(int times){
+float readIR(float times){
+  int n = int(times);
   for(int x=0;x<times;x++){
     digitalWrite(IRemitter,HIGH);    //turning the IR LEDs on to read the IR coming from the obstacle
-    delay(10);                      // minimum delay necessary to read values
+    delay(60);                      // minimum delay necessary to read values
     obstacleIR = analogRead(IRpin);  // storing IR coming from the obstacle
     value[x] = obstacleIR; // calculating changes in IR values and storing it for future average
   }
@@ -144,21 +180,31 @@ int readIR(int times){
   return(distance/times);            // return the final value
 }
 
+int contarCiclos(){
+  unsigned long tiempoActual = 0;         // almacenara el tiempo actual
+  unsigned long tiempoTranscurrido = 0;   // almacenara la diferencia el tiempo necesario para controlar la topa de ciclos
+  
+  int numPico = -1;
+  float senal[]= {0.0,0.0,0.0};
+  float varAnt=0.0;
+  float var=0.0;
 
-//-- Function to sound a buzzer for audible measurements --//
-void buzzer(){
-  if (distance>1){
-    if(distance>100){ // continuous sound if the obstacle is too close
-      digitalWrite(11,HIGH);
-    }
-    else{  // bips faster when an obstacle approaches
-      digitalWrite(11,HIGH);
-      delay(150-distance);  // adjust this value for your convenience
-      digitalWrite(11,LOW);
-      delay(150-distance);  // adjust this value for your convenience
-    }
+  while (tiempoTranscurrido<= 30000){
+  var = readIR(5.0); // var almacena cada nueva distancia almacenada por el sensor
+  if (var != varAnt){
+      senal[0] = senal [1]; senal[1]=senal[2];
+      senal[2] = var;
   }
-  else{  // off if there is no obstacle
-    digitalWrite(11,LOW);
+  if (senal[1]>senal[0]&&senal[1]>senal[2]){
+      numPico = numPico+1;
   }
+  if (numPico==0){
+    tiempoInicial = millis();
+  }
+
+  varAnt=var;
+  tiempoActual=millis();          // Captura el tiempo transcurrido hasta este momento
+  tiempoTranscurrido = tiempoActual - tiempoInicial;
+  }
+  return (numPico);
 }
